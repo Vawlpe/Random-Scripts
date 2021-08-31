@@ -17,8 +17,7 @@ def EloRating(Ra, Rb, K, d):
     Rb += K * (1-d - Pb)
     return [Ra, Rb]
 
-if __name__ == '__main__':
-
+def main():
     # loop trough input until a blank line is found, to load old leaderboard
     old = {}
     print('Paste the current ELO leaderboard and press enter:')
@@ -64,3 +63,6 @@ if __name__ == '__main__':
     # pretty-print final results ready to be inputed back into the script for the next race
     print('\nUpdated Results: ')
     printLB(old)
+
+if __name__ == '__main__':
+    main()
