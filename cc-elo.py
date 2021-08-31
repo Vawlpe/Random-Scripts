@@ -54,8 +54,10 @@ def main():
             Rb = elo
             l = int(input(f'Input {name}\'s SRC rank: ' ))
             hs = (g*h)*5
-            K = abs((w-l)*hs)
-
+            if w-l == 0:
+                K = abs(((1*hs)*2))
+            else:
+                K = abs(((w-l)*hs))
             n = EloRating(Ra, Rb, K, 1)
             old.update({winner : round(n[0],2)})
             old.update({name : round(n[1],2)})
