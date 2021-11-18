@@ -1,0 +1,283 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: AsepriteTemplate
+//   Authors: Vawlpe
+//   Version: 0.0
+//   Purpose: Read Aseprite files
+//  Category: Graphics
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+LittleEndian(); // Can someone pls explain to me why the ase format is little endian but contains big endian formats (IIC, ZLIB)
+
+// Fixed point number
+typedef struct {
+    ushort Integer;
+    ushort Fraction;
+} FIXED;
+
+// Better String
+typedef struct {
+    ushort Length;
+    byte Characters[Length];
+} STRING;
+
+// ICC Spec (pain)
+typedef struct {
+    byte Sig[4];
+    uint Offset;
+    uint Size;
+} ICCTag;
+typedef struct {
+    BigEndian(); // why
+    byte Header[128];
+    struct TAGTABLE{
+        uint Count;
+        ICCTag Tags[this.Count];
+    } TagTable;
+    local int i;
+    for (i = 0; i < this.TagTable.Count; i++)
+    {
+        byte Tag[this.TagTable.Tags[i].Size];
+    }
+    LittlEndian(); // *sigh*
+} ICCProfile;
+
+// ZLIB Spec (pain 2.0)
+typedef struct {
+    
+} ZLIBDeflateData;
+typedef struct {
+    BigEndian();
+    byte CMP;
+    byte FLG;
+    if (((FLG >> 5) & 0b000000001) > 0)
+    {
+        uint DICTID;
+    }
+
+    LittleEndian(); 
+} ZLIBData;
+
+
+// Aseprite types
+typedef byte PIXELRGBA[4];
+typedef byte PIXELGrayScale[2];
+typedef byte PIXELIndexed;
+typedef byte TILE8;
+typedef ushort TILE16;
+typedef uint TILE32;
+
+typedef struct {
+    byte R;
+    byte G;
+    byte B;
+} COL;
+
+typedef struct {
+    byte Skip;
+    byte Count;
+    COL Colors[Count];
+} PACKET;
+
+typedef struct {
+    ushort From;
+    ushort To;
+    byte LoopDir;
+    byte Unused0[8];
+    COL OldColor;
+    byte Unused1;
+    STRING Name;
+} TAG;
+
+// Frame chunk type
+typedef struct {
+    uint Size;
+    ushort Type;
+    struct DATA {
+        if (parentof(this).Type == 0x0004)
+        { 
+            Printf("Old Palette\n");
+            ushort Count;
+            PACKET Packets[Count] <optimize=false>;
+        }
+        else if (parentof(this).Type == 0x0011) // Old palette (Backward Compatibility, ignore if 0x2019 chunk found)
+        {
+            Printf("Old Palette\n");
+            ushort Count;
+            PACKET Packets[Count] <optimize=false>;
+        }
+        else if (parentof(this).Type == 0x2004) // Layer
+        {
+            Printf("Layer\n");
+            ushort Flags;
+            ushort Type;
+            ushort ChildLevel;
+            ushort DefWidth;
+            ushort DefHeight;
+            ushort BlendMode;
+            byte Opacity;
+            byte Unused[3];
+            STRING LayerName;
+            if (Type == 2)
+            {
+                uint TilesetIndex;
+            }
+        }
+        else if (parentof(this).Type == 0x2005) // Cel
+        {
+            Printf("Cel\n");
+            ushort LayerIndex;
+            short X;
+            short Y;
+            byte Opacity;
+            ushort Type;
+            byte Unused[7];
+            if (Type == 0)
+            {
+                ushort Width;
+                ushort Height;
+                PIXEL Pixels[Width*Height];
+            }
+            else if (Type == 1)
+            {
+                ushort Link;
+            }
+            else if (Type == 2)
+            {
+                ushort Width;
+                ushort Height;
+                byte CompressedData[100];
+            }
+            else if (Type == 3)
+            {
+
+            }
+        }
+        else if (parentof(this).Type == 0x2006) // Cel Extra
+        {
+            Printf("Cel Extra\n");
+        }
+        else if (parentof(this).Type == 0x2007) // Color Profile
+        {
+            Printf("Color Profile\n");
+            ushort Type;
+            ushort Flags;
+            FIXED Gamma;
+            byte Unused[8];
+            if (this.Type == 2) // ICC
+            {
+                uint Length;
+                ICCProfile ICC;
+            }
+        }
+        else if (parentof(this).Type == 0x2008) // External Files
+        {
+            Printf("External Files\n");
+        }
+        else if (parentof(this).Type == 0x2016) // Mask (DEPRECATED)
+        {
+            Printf("Mask\n");
+        }
+        else if (parentof(this).Type == 0x2017) // Path (Unused)
+        {
+            Printf("Path\n");
+        }
+        else if (parentof(this).Type == 0x2018) // Tags
+        {
+            Printf("Tags\n");
+            ushort Count;
+            byte Unused[8];
+            TAG Tags[Count] <optimize=false>;
+            
+        }
+        else if (parentof(this).Type == 0x2019) // Palette
+        {
+            Printf("Palette\n");
+            uint NewSize;
+            uint FirstIndex;
+            uint LastIndex;
+            byte Unused[8];
+            local int i;
+            for (i = this.FirstIndex; i <= this.LastIndex; i++)
+            {
+                struct ENTRY {
+                    ushort Flags;
+                    byte R;
+                    byte G;
+                    byte B;
+                    byte A;
+                    if (this.Flags == 1)
+                    {
+                        STRING ColorName;
+                    }
+                } Entry;
+            } 
+        }
+        else if (parentof(this).Type == 0x2020) // User Data
+        {
+            Printf("User Data\n");
+        }
+        else if (parentof(this).Type == 0x2022) // Slice
+        {
+            Printf("Slice\n");
+        }
+        else if (parentof(this).Type == 0x2023) // Tileset
+        {
+            Printf("Tileset\n");
+        }
+        else
+        {
+            Printf("UNKNOWN\n");
+        }
+    } Data;
+} CHUNK;
+
+// Frame type
+typedef struct {
+    struct FRAME_HEADER {
+        uint Size;
+        ushort MagicNumber; // 0xF1FA
+        ushort OldChunks;
+        ushort Duration;
+        byte Unused0[2];
+        uint NewChunks;
+    } FrameHeader;
+    if (this.FrameHeader.OldChunks != 0xFFFF)
+    {
+        CHUNK Chunks[this.FrameHeader.OldChunks] <optimize=false>;
+    }
+    else
+    {
+        CHUNK Chunks[this.FrameHeader.NewChunks] <optimize=false>;
+    }
+} FRAME;
+
+// Actual file spec
+struct FILE {
+    struct ASE_HEADER {
+        uint Size;
+        ushort MagicNumber; // 0xA5E0
+        ushort Frames;
+        ushort Width;
+        ushort Height;
+        ushort ColorDepth;
+        uint Flags;
+        ushort Speed;
+        uint Unused0;
+        uint Unused1;
+        byte TransparentPaletteIndex;
+        byte Unused2[3];
+        ushort NumColors;
+        byte PixelWidth;
+        byte PixelHeight;
+        short GridX;
+        short GridY;
+        ushort GridW;
+        ushort GridH;
+        byte Unused3[84];
+    } AseHeader;
+    FRAME Frames[this.AseHeader.Frames] <optimize=false>;
+} File;
