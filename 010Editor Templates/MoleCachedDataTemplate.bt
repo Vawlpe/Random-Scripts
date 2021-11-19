@@ -23,7 +23,7 @@ struct FILE {
         {
             typedef struct {
                 struct HEADER {
-                    //byte Format; // TODO: still not implemented in Mole
+                    byte Format <bgcolor=0x0000FF>;
                     ushort Size <bgcolor=0x00FF00>;
                 } header;
                 byte Data[this.header.Size] <bgcolor=0xFF0000>;
@@ -33,7 +33,7 @@ struct FILE {
             for (i = 16; i < FileSize(); i++)
             {
                 CHUNK chunk;
-                i+=chunk.header.Size+1;
+                i+=chunk.header.Size+3;
             }
         }
         else if (file.g_header.Type == 1) // Pointer Table
