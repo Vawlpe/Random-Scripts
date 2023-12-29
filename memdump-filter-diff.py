@@ -26,9 +26,11 @@ def anti_diff(a, b):
 def recursive_anti_diff_files(*paths):
     remaining = list(paths)
     while len(remaining) > 1:
-        remaining.append(anti_diff(
-            np.fromfile(remaining.pop(), dtype=np.uint8),
-            np.fromfile(remaining.pop(), dtype=np.uint8)))
+        a = remaining.pop()
+        b = remaining.pop()
+        a = np.fromfile(a, dtype=np.uint8) if type(a) is str else a
+        b = np.fromfile(b, dtype=np.uint8) if type(b) is str else b
+        remaining.append(anti_diff(a, b))
     return remaining[0]
 
 
